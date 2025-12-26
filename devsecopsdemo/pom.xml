@@ -4,91 +4,116 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
                              https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-    <modelVersion>4.0.0</modelVersion>
+  <modelVersion>4.0.0</modelVersion>
 
-    <!-- Spring Boot Parent -->
-    <parent>
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>4.0.1</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>com.example</groupId>
+  <artifactId>devsecopsdemo</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>devsecopsdemo</name>
+  <description>Spring Boot DevSecOps Demo Application</description>
+
+  <!-- ================= PROPERTIES ================= -->
+  <properties>
+    <java.version>21</java.version>
+
+    <!-- Sonar -->
+    <sonar.projectKey>devsecopsdemo</sonar.projectKey>
+    <sonar.projectName>devsecopsdemo</sonar.projectName>
+    <sonar.qualitygate.wait>true</sonar.qualitygate.wait>
+    <sonar.qualitygate.timeout>300</sonar.qualitygate.timeout>
+  </properties>
+
+  <!-- ================= DEPENDENCIES ================= -->
+  <dependencies>
+
+    <!-- Web -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-webmvc</artifactId>
+    </dependency>
+
+    <!-- Testing -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-webmvc-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+
+  <!-- ================= BUILD ================= -->
+  <build>
+    <plugins>
+
+      <!-- Spring Boot -->
+      <plugin>
         <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.1</version>
-        <relativePath/>
-    </parent>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
 
-    <!-- Project Info -->
-    <groupId>com.example</groupId>
-    <artifactId>devsecopsdemo</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>devsecopsdemo</name>
-    <description>Spring Boot DevSecOps Demo Project</description>
+      <!-- Unit Tests (Fix ByteBuddy warning) -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.2.5</version>
+        <configuration>
+          <argLine>-XX:+EnableDynamicAgentLoading</argLine>
+        </configuration>
+      </plugin>
 
-    <!-- Java Version -->
-    <properties>
-        <java.version>21</java.version>
-    </properties>
+      <!-- SAST: SpotBugs -->
+      <plugin>
+        <groupId>com.github.spotbugs</groupId>
+        <artifactId>spotbugs-maven-plugin</artifactId>
+        <version>4.8.3.0</version>
+        <executions>
+          <execution>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
 
-    <!-- Dependencies -->
-    <dependencies>
+      <!-- SCA: OWASP Dependency Check -->
+      <plugin>
+        <groupId>org.owasp</groupId>
+        <artifactId>dependency-check-maven</artifactId>
+        <version>9.0.7</version>
+        <executions>
+          <execution>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+          <failBuildOnCVSS>7</failBuildOnCVSS>
+          <formats>
+            <format>HTML</format>
+            <format>JSON</format>
+          </formats>
+        </configuration>
+      </plugin>
 
-        <!-- Spring Web -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
+      <!-- SonarQube -->
+      <plugin>
+        <groupId>org.sonarsource.scanner.maven</groupId>
+        <artifactId>sonar-maven-plugin</artifactId>
+        <version>3.10.0.2594</version>
+      </plugin>
 
-        <!-- Spring Boot Test -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-    </dependencies>
-
-    <!-- Build Plugins -->
-    <build>
-        <plugins>
-
-            <!-- Spring Boot Plugin -->
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-
-            <!-- SonarQube Plugin -->
-            <plugin>
-                <groupId>org.sonarsource.scanner.maven</groupId>
-                <artifactId>sonar-maven-plugin</artifactId>
-                <version>3.11.0.3922</version>
-            </plugin>
-
-            <!-- OWASP Dependency Check Plugin (403 FIXED) -->
-            <plugin>
-                <groupId>org.owasp</groupId>
-                <artifactId>dependency-check-maven</artifactId>
-                <version>9.0.7</version>
-                <configuration>
-                    <!-- Disable NVD auto update to avoid 403 -->
-                    <autoUpdate>false</autoUpdate>
-
-                    <!-- Do NOT fail build for demo -->
-                    <failBuildOnCVSS>11</failBuildOnCVSS>
-
-                    <!-- Report formats -->
-                    <formats>
-                        <format>HTML</format>
-                        <format>JSON</format>
-                    </formats>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-        </plugins>
-    </build>
+    </plugins>
+  </build>
 
 </project>
